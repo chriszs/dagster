@@ -326,7 +326,6 @@ class ActiveExecution:
 
     def plan_events_iterator(self, pipeline_context) -> Iterator[DagsterEvent]:
         """Process all steps that can be skipped and abandoned"""
-
         steps_to_skip = self.get_steps_to_skip()
         while steps_to_skip:
             for step in steps_to_skip:
@@ -532,7 +531,6 @@ class ActiveExecution:
         that the previous run worker might have crashed before launching these steps, or it may have
         launched them but they have yet to report a STEP_START event.
         """
-
         self.get_steps_to_execute()
 
         for event in dagster_events:
