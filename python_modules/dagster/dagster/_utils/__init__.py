@@ -40,10 +40,11 @@ from typing import (
     overload,
 )
 
-import dagster._check as check
-import dagster._seven as seven
 import packaging.version
 from typing_extensions import Literal
+
+import dagster._check as check
+import dagster._seven as seven
 
 if sys.version_info > (3,):
     from pathlib import Path  # pylint: disable=import-error
@@ -668,10 +669,12 @@ def traced(func: T_Callable) -> T_Callable:
 
     return cast(T_Callable, inner)
 
+
 def len_iter(iterable: Iterable[object]) -> int:
     if isinstance(iterable, Sized):
         return len(iterable)
     return sum(1 for _ in iterable)
+
 
 def iter_to_list(iterable: Iterable[T]) -> List[T]:
     if isinstance(iterable, List):
