@@ -6,7 +6,6 @@ from dagster_graphql.implementation.loader import (
     CrossRepoAssetDependedByLoader,
     ProjectedLogicalVersionLoader,
 )
-from dagster_graphql.schema.util import HasContext
 
 import dagster._seven as seven
 from dagster import AssetKey, DagsterEventType, EventRecordsFilter
@@ -28,6 +27,7 @@ from .utils import capture_error
 if TYPE_CHECKING:
     from ..schema.asset_graph import GrapheneAssetNode
     from ..schema.freshness_policy import GrapheneAssetFreshnessInfo
+    from ..schema.util import HasContext
 
 
 def _normalize_asset_cursor_str(cursor_string):
@@ -78,7 +78,7 @@ def get_assets(graphene_info, prefix=None, cursor=None, limit=None):
 
 
 def asset_node_iter(
-        graphene_info: HasContext,
+    graphene_info,
 ) -> Iterator[Tuple[RepositoryLocation, ExternalRepository, ExternalAssetNode]]:
     for location in graphene_info.context.repository_locations:
         for repository in location.get_repositories().values():
@@ -86,7 +86,9 @@ def asset_node_iter(
                 yield location, repository, external_asset_node
 
 
-def get_asset_node_definition_collisions(graphene_info: HasContext, asset_keys: Sequence[AssetKey]):
+def get_asset_node_definition_collisions(
+    graphene_info: "HasContext", asset_keys: Sequence[AssetKey]
+):
     from ..schema.asset_graph import GrapheneAssetNodeDefinitionCollision
     from ..schema.external import GrapheneRepository
 
@@ -396,22 +398,14 @@ def get_freshness_info(
         asset_graph=asset_graph, record=latest_record
     )
 
-    # in the future, if you have upstream source assets with versioning policies, available data
-    # times will be based off of the timestamp of the most recent materializations.
     current_minutes_late = freshness_policy.minutes_late(
         evaluation_time=current_time,
         used_data_times=used_data_times,
-        available_data_times={
-            # assume materializing an asset at time T will update the data time of that asset to T
-            key: current_time
-            for key in used_data_times.keys()
-        },
     )
 
     latest_materialization_minutes_late = freshness_policy.minutes_late(
         evaluation_time=latest_materialization_time,
         used_data_times=used_data_times,
-        available_data_times={key: latest_materialization_time for key in used_data_times.keys()},
     )
 
     return GrapheneAssetFreshnessInfo(
