@@ -46,6 +46,7 @@ from .external_data import (
     ExternalPipelineData,
     ExternalPresetData,
     ExternalRepositoryData,
+    ExternalResourceData,
     ExternalScheduleData,
     ExternalSensorData,
     ExternalSensorMetadata,
@@ -130,6 +131,17 @@ class ExternalRepository:
 
     def get_external_schedules(self) -> Sequence[ExternalSchedule]:
         return self._external_schedules.values()
+
+    @property
+    @cached_method
+    def _external_resources(self) -> Dict[str, ExternalResource]:
+        return {
+            external_resource_data.name: ExternalResource(external_resource_data, self._handle)
+            for external_resource_data in self.external_repository_data.external_resource_data
+        }
+
+    def get_external_resources(self) -> Sequence[ExternalResource]:
+        return self._external_resources.values()
 
     @property
     @cached_method
@@ -505,6 +517,20 @@ class ExternalExecutionPlan:
             ]
 
         return self._topological_step_levels
+
+
+class ExternalResource:
+    def __init__(self, external_resource_data: ExternalResourceData, handle: RepositoryHandle):
+        self._external_resource_data = check.inst_param(
+            external_resource_data, "external_resource_data", ExternalResourceData
+        )
+        self._handle = InstigatorHandle(
+            self._external_resource_data.name, check.inst_param(handle, "handle", RepositoryHandle)
+        )
+
+    @property
+    def name(self) -> str:
+        return self._external_resource_data.name
 
 
 class ExternalSchedule:

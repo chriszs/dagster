@@ -1,6 +1,7 @@
 import dagster._check as check
 from dagster._core.definitions.run_request import InstigatorType
 from dagster._core.host_representation import PipelineSelector, RepositorySelector, ScheduleSelector
+from dagster._core.host_representation.repository_location import RepositoryLocation
 from dagster._seven import get_current_datetime_in_utc, get_timestamp_from_utc_datetime
 from graphene import ResolveInfo
 
