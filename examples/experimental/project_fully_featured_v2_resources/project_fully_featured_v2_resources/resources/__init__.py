@@ -14,6 +14,7 @@ from .parquet_io_manager import (
     s3_partitioned_parquet_io_manager,
 )
 from .snowflake_io_manager import SnowflakeIOManager
+from .s3_pickle_io_manager import S3PickledIOManagerAdapter
 
 DBT_PROJECT_DIR = file_relative_path(__file__, "../../dbt_project")
 DBT_PROFILES_DIR = DBT_PROJECT_DIR + "/config"
@@ -55,7 +56,7 @@ SHARED_SNOWFLAKE_CONF = {
 
 RESOURCES_PROD = {
     "s3_bucket": "hackernews-elementl-prod",
-    "io_manager": common_bucket_s3_pickle_io_manager,
+    "io_manager": S3PickledIOManagerAdapter(s3_bucket="hackernews-elementl-prod"),
     "s3": s3_resource,
     "parquet_io_manager": s3_partitioned_parquet_io_manager,
     "warehouse_io_manager": SnowflakeIOManager(dict(database="DEMO_DB", **SHARED_SNOWFLAKE_CONF)),
@@ -67,7 +68,7 @@ RESOURCES_PROD = {
 
 RESOURCES_STAGING = {
     "s3_bucket": "hackernews-elementl-dev",
-    "io_manager": common_bucket_s3_pickle_io_manager,
+    "io_manager": S3PickledIOManagerAdapter(s3_bucket="hackernews-elementl-dev"),
     "s3": s3_resource,
     "parquet_io_manager": s3_partitioned_parquet_io_manager,
     "warehouse_io_manager": SnowflakeIOManager(
