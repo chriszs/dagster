@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import warnings
 from hashlib import sha256
-from typing import TYPE_CHECKING, Mapping, NamedTuple, Optional, Union
+from typing import TYPE_CHECKING, Mapping, NamedTuple, Optional, Sequence, Union
 
 from typing_extensions import Final
 
 from dagster import _check as check
 from dagster._annotations import experimental
+from dagster._core.host_representation.external import ExternalRepository
+from dagster._core.host_representation.external_data import ExternalAssetNode
 from dagster._utils.backcompat import ExperimentalWarning
+from dagster._utils.cached_method import cached_method
 
 if TYPE_CHECKING:
     from dagster._core.definitions.events import (
@@ -198,11 +201,10 @@ def _extract_event_data_from_entry(
 # ##### PROJECTED LOGICAL VERSION LOADER
 # ########################
 
-class ProjectedLogicalVersionLoader:
+class CachingProjectedLogicalVersionResolver:
     """
-    A batch loader that computes the projected logical version for a set of asset keys. This is
-    necessary to avoid recomputation, since each asset's logical version is a function of its
-    dependency logical versions.
+    Used to resolve a set of projected logical versions with caching. Avoids redundant database
+    calls that would occur when naively iteratively computing projected logical versions without caching.
     """
 
     def __init__(
