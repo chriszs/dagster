@@ -38,12 +38,14 @@ from dagster._core.definitions.partition_mapping import (
     PartitionMapping,
     get_builtin_partition_mapping_types,
 )
+from dagster._core.definitions.resource_definition import ResourceDefinition
 from dagster._core.definitions.schedule_definition import DefaultScheduleStatus
 from dagster._core.definitions.sensor_definition import DefaultSensorStatus, SensorDefinition
 from dagster._core.definitions.time_window_partitions import TimeWindowPartitionsDefinition
 from dagster._core.definitions.utils import DEFAULT_GROUP_NAME
 from dagster._core.errors import DagsterInvalidDefinitionError
 from dagster._core.snap import PipelineSnapshot
+from dagster._core.snap.mode import ResourceDefSnap, build_resource_def_snap
 from dagster._serdes import DefaultNamedTupleSerializer, whitelist_for_serdes
 from dagster._utils.error import SerializableErrorInfo
 
@@ -60,6 +62,7 @@ class ExternalRepositoryData(
             ("external_asset_graph_data", Sequence["ExternalAssetNode"]),
             ("external_pipeline_datas", Optional[Sequence["ExternalPipelineData"]]),
             ("external_job_refs", Optional[Sequence["ExternalJobRef"]]),
+            ("external_resource_data", Optional[Sequence["ExternalResourceData"]]),
         ],
     )
 ):
@@ -72,6 +75,7 @@ class ExternalRepositoryData(
         external_asset_graph_data: Optional[Sequence["ExternalAssetNode"]] = None,
         external_pipeline_datas: Optional[Sequence["ExternalPipelineData"]] = None,
         external_job_refs: Optional[Sequence["ExternalJobRef"]] = None,
+        external_resource_data: Optional[Sequence["ExternalResourceData"]] = None,
     ):
         return super(ExternalRepositoryData, cls).__new__(
             cls,
@@ -99,6 +103,9 @@ class ExternalRepositoryData(
             ),
             external_job_refs=check.opt_nullable_sequence_param(
                 external_job_refs, "external_job_refs", of_type=ExternalJobRef
+            ),
+            external_resource_data=check.opt_nullable_sequence_param(
+                external_resource_data, "external_resource_data", of_type=ExternalResourceData
             ),
         )
 
@@ -834,6 +841,26 @@ class ExternalAssetDependedBy(
 
 
 @whitelist_for_serdes
+class ExternalResourceData(
+    NamedTuple(
+        "_ExternalResourceData",
+        [
+            ("name", str),
+            ("resource_snapshot", ResourceDefSnap),
+        ],
+    )
+):
+    def __new__(cls, name: str, resource_snapshot: ResourceDefSnap):
+        return super(ExternalResourceData, cls).__new__(
+            cls,
+            name=check.str_param(name, "name"),
+            resource_snapshot=check.inst_param(
+                resource_snapshot, "resource_snapshot", ResourceDefSnap
+            ),
+        )
+
+
+@whitelist_for_serdes
 class ExternalAssetNode(
     NamedTuple(
         "_ExternalAssetNode",
@@ -961,6 +988,8 @@ def external_repository_data_from_def(
         )
         job_refs = None
 
+    resource_datas = repository_def.get_top_level_resources()
+
     return ExternalRepositoryData(
         name=repository_def.name,
         external_schedule_datas=sorted(
@@ -983,6 +1012,13 @@ def external_repository_data_from_def(
         ),
         external_pipeline_datas=pipeline_datas,
         external_job_refs=job_refs,
+        external_resource_data=sorted(
+            [
+                external_resource_data_from_def(res_name, res_data)
+                for res_name, res_data in resource_datas.items()
+            ],
+            key=lambda rd: rd.name,
+        ),
     )
 
 
@@ -1186,6 +1222,16 @@ def external_job_ref_from_def(pipeline_def: PipelineDefinition) -> ExternalJobRe
             key=lambda pd: pd.name,
         ),
         is_legacy_pipeline=not isinstance(pipeline_def, JobDefinition),
+    )
+
+
+def external_resource_data_from_def(
+    name: str, resource_def: ResourceDefinition
+) -> ExternalResourceData:
+    check.inst_param(resource_def, "resource_def", ResourceDefinition)
+    return ExternalResourceData(
+        name=name,
+        resource_snapshot=build_resource_def_snap(name, resource_def),
     )
 
 

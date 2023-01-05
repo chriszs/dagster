@@ -100,6 +100,7 @@ def _create_repository_using_definitions_args(
         name=name,
         default_executor_def=executor,
         default_logger_defs=loggers,
+        top_level_resources=resource_defs,
     )
     def created_repo():
         return [
