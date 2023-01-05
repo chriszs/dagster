@@ -1,6 +1,7 @@
+from dagster_aws.s3.io_manager import s3_pickle_io_manager
+
 from dagster import IOManagerDefinition
 from dagster._config.structured_config import StructuredIOManagerAdapter
-from dagster_aws.s3.io_manager import s3_pickle_io_manager
 
 
 class S3PickledIOManagerAdapter(StructuredIOManagerAdapter):

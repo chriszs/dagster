@@ -13,8 +13,8 @@ from .parquet_io_manager import (
     local_partitioned_parquet_io_manager,
     s3_partitioned_parquet_io_manager,
 )
-from .snowflake_io_manager import SnowflakeIOManager
 from .s3_pickle_io_manager import S3PickledIOManagerAdapter
+from .snowflake_io_manager import SnowflakeIOManager
 
 DBT_PROJECT_DIR = file_relative_path(__file__, "../../dbt_project")
 DBT_PROFILES_DIR = DBT_PROJECT_DIR + "/config"

@@ -1,8 +1,11 @@
 from typing import Optional
+
 import pydantic
+from dagster_duckdb_pandas import duckdb_pandas_io_manager
+
 from dagster import IOManagerDefinition
 from dagster._config.structured_config import StructuredIOManagerAdapter
-from dagster_duckdb_pandas import duckdb_pandas_io_manager
+
 
 class DuckDbPandasIOManager(StructuredIOManagerAdapter):
     database: str
