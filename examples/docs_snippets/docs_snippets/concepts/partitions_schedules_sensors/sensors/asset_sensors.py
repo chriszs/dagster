@@ -1,14 +1,6 @@
-from dagster import (
-    AssetSelection,
-    DailyPartitionsDefinition,
-    RunRequest,
-    SkipReason,
-    WeeklyPartitionsDefinition,
-    asset,
-    define_asset_job,
-    job,
-    multi_asset_sensor,
-)
+from dagster import (AssetSelection, DailyPartitionsDefinition, RunRequest,
+                     SkipReason, WeeklyPartitionsDefinition, asset,
+                     define_asset_job, job, multi_asset_sensor)
 
 
 @job
@@ -17,7 +9,8 @@ def my_job():
 
 
 # start_asset_sensor_marker
-from dagster import AssetKey, EventLogEntry, SensorEvaluationContext, asset_sensor
+from dagster import (AssetKey, EventLogEntry, SensorEvaluationContext,
+                     asset_sensor)
 
 
 @asset_sensor(asset_key=AssetKey("my_table"), job=my_job)
@@ -68,7 +61,7 @@ def my_freshness_alerting_sensor(context: FreshnessPolicySensorContext):
 
 
 @multi_asset_sensor(
-    asset_keys=[AssetKey("asset_a"), AssetKey("asset_b")],
+    monitored_asset_selection=[AssetKey("asset_a"), AssetKey("asset_b")],
     job=my_job,
 )
 def asset_a_and_b_sensor(context):
@@ -84,7 +77,7 @@ def asset_a_and_b_sensor(context):
 
 
 @multi_asset_sensor(
-    asset_keys=[AssetKey("asset_a"), AssetKey("asset_b")],
+    monitored_asset_selection=[AssetKey("asset_a"), AssetKey("asset_b")],
     job=my_job,
 )
 def asset_a_and_b_sensor_with_skip_reason(context):
@@ -149,7 +142,9 @@ weekly_asset_job = define_asset_job(
 # start_daily_asset_to_weekly_asset
 
 
-@multi_asset_sensor(asset_keys=[AssetKey("upstream_daily_1")], job=weekly_asset_job)
+@multi_asset_sensor(
+    monitored_asset_selection=[AssetKey("upstream_daily_1")], job=weekly_asset_job
+)
 def trigger_weekly_asset_from_daily_asset(context):
     run_requests_by_partition = {}
     materializations_by_partition = context.latest_materialization_records_by_partition(
@@ -188,7 +183,10 @@ def trigger_weekly_asset_from_daily_asset(context):
 
 
 @multi_asset_sensor(
-    asset_keys=[AssetKey("upstream_daily_1"), AssetKey("upstream_daily_2")],
+    monitored_asset_selection=[
+        AssetKey("upstream_daily_1"),
+        AssetKey("upstream_daily_2"),
+    ],
     job=downstream_daily_job,
 )
 def trigger_daily_asset_if_both_upstream_partitions_materialized(context):
@@ -211,7 +209,10 @@ def trigger_daily_asset_if_both_upstream_partitions_materialized(context):
 
 # start_multi_asset_sensor_OR
 @multi_asset_sensor(
-    asset_keys=[AssetKey("upstream_daily_1"), AssetKey("upstream_daily_2")],
+    monitored_asset_selection=[
+        AssetKey("upstream_daily_1"),
+        AssetKey("upstream_daily_2"),
+    ],
     job=downstream_daily_job,
 )
 def trigger_daily_asset_when_any_upstream_partitions_have_new_materializations(context):
