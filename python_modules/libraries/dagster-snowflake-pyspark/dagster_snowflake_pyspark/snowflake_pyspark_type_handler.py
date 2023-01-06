@@ -45,7 +45,7 @@ class SnowflakePySparkTypeHandler(DbTypeHandler[DataFrame]):
     ) -> Mapping[str, RawMetadataValue]:
         options = _get_sf_options(context.resource_config, table_slice)
 
-        obj.write.format("net.snowflake.spark.snowflake").options(**options).mode("append").save()
+        obj.write.format("net.snowflake.spark.snowflake").options(**options).mode("append").save() # should probably be replace instead of append
 
         return {
             "row_count": obj.count(),
