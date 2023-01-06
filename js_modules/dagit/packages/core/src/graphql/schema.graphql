@@ -2112,6 +2112,7 @@ type Repository {
   assetNodes: [AssetNode!]!
   displayMetadata: [RepositoryMetadata!]!
   assetGroups: [AssetGroup!]!
+  topLevelResources: [TopLevelResource!]!
 }
 
 type Job implements SolidContainer & IPipelineSnapshot {
@@ -2141,6 +2142,10 @@ type Job implements SolidContainer & IPipelineSnapshot {
 type AssetGroup {
   groupName: String!
   assetKeys: [AssetKey!]!
+}
+
+type TopLevelResource {
+  name: String!
 }
 
 type RepositoryConnection {
@@ -3082,6 +3087,11 @@ type DagitQuery {
   schedulesOrError(repositorySelector: RepositorySelector!): SchedulesOrError!
 
   """
+  Retrieve all the top level resources.
+  """
+  topLevelResourcesOrError(repositorySelector: RepositorySelector!): ResourcesOrError!
+
+  """
   Retrieve a sensor by its location name, repository name, and sensor name.
   """
   sensorOrError(sensorSelector: SensorSelector!): SensorOrError!
@@ -3292,6 +3302,12 @@ input GraphSelector {
   graphName: String!
   repositoryName: String!
   repositoryLocationName: String!
+}
+
+union ResourcesOrError = TopLevelResources | RepositoryNotFoundError | PythonError
+
+type TopLevelResources {
+  results: [TopLevelResource!]!
 }
 
 """
