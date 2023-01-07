@@ -245,6 +245,14 @@ class MultiprocessExecutor(Executor):
                                 active_execution.handle_event(event_or_none)
 
                         except ChildProcessCrashException as crash:
+                            oom_clause = ""
+                            if crash.exit_code == -9:
+                                oom_clause = (
+                                    " This exit code usually indicates that the process ran out of"
+                                    " memory. Try increasing the amount of memory available to the"
+                                    " run worker."
+                                )
+
                             serializable_error = serializable_error_info_from_exc_info(
                                 sys.exc_info()
                             )
@@ -255,8 +263,10 @@ class MultiprocessExecutor(Executor):
                                 step_context,
                                 (
                                     "Multiprocess executor: child process for step {step_key} "
-                                    "unexpectedly exited with code {exit_code}"
-                                ).format(step_key=key, exit_code=crash.exit_code),
+                                    "unexpectedly exited with code {exit_code}.{oom_clause}."
+                                ).format(
+                                    step_key=key, exit_code=crash.exit_code, oom_clause=oom_clause
+                                ),
                                 EngineEventData.engine_error(serializable_error),
                             )
                             step_failure_event = DagsterEvent.step_failure_event(
